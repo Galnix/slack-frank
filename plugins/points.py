@@ -37,6 +37,14 @@ def handle(command, channel, user):
         if word.endswith("++"):
             # TODO if user is frank, have him say some stuff
             word = word.strip("-+")
+            if word.startswith('<@'):
+                try:
+                    temp = word[2:].strip('>').upper()
+                    temp = user_id_map[temp]
+                except:
+                    temp = ""
+                if temp != "":
+                    word = temp
             if user_id_map[user] == word:
                 response = "Nice try."
             else:
