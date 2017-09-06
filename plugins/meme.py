@@ -24,6 +24,14 @@ OPACITY = 0.6
 MAX_DEFAULT_MEMES = 1
 IMAGE_FILE_NAME = path.join(d, 'meme/meme.png')
 
+url_blacklist = ["image.isu.pub"]
+
+user_id_map = {'U4S3JCUF4': 'galnix', 
+          'U4QMUNC8G': 'comptroller', 
+          'U4S3A1Z4P': 'fazjaxton', 
+          'U5BGCL405': 'frank', 
+          'U4RSHS8FN': 'raptor'}
+
 words_response = requests.get("http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain")
 WORDS = words_response.content.splitlines()
 
@@ -70,29 +78,30 @@ def meme_image(img, mainText, hashText):
     draw.text((W-ws,H-hs), hashText, fill='white', font=hashfont)
     # Return the image
     return img
+    
+def url_blacklisted(url):
+    global url_blacklist
+    for i in url_blacklist:
+        if (i in url):
+            return True
+    
+    return False
 
 def find_image(query):
     service = build("customsearch", "v1", developerKey=GOOGLE_API_KEY)
     num_attempts = 10
     
     try:
-        res = service.cse().list(q=query, searchType='image', imgSize='large', imgType='photo', safe="high", cx=GOOGLE_API_CX, num=num_attempts).execute()    
+        res = service.cse().list(q=query, searchType='image', safe="high", cx=GOOGLE_API_CX, num=num_attempts).execute()    
     except:
         print("Something went wrong with a google search")
-    
-    #im = pyimgur.Imgur(IMGUR_CLIENT_ID)
-    #item = im.search_gallery("tag: " + query.replace(" ", " OR "))
-    
+     
     attempt = 0
     while (attempt < num_attempts):        
         try:
-            #if item[attempt].is_album:
-            #    url = item[attempt].images[0].link
-            #else:
-            #    url = item[attempt].link
-            #print(url)
-            #response = requests.get(url)
             url = res['items'][attempt]['link']
+            if url_blacklisted (url):
+                continue
             response = requests.get(url)
             img = Image.open(BytesIO(response.content))
             img.thumbnail((960,720), Image.ANTIALIAS)
@@ -105,6 +114,7 @@ def find_image(query):
                 print("Logging Failed")
             break
         except:
+            print("something went wrong parsing the image")
             attempt += 1
         
     # Fallback to local images for the meme instead
@@ -171,16 +181,16 @@ def random_meme(text, channel, user):
     global last_text
     if not text.startswith('#'):
         last_text = text
-    return ""
- #   if random.randint(1,100) > 2:
- #       return
- #   text = trigger.group(1)
- #   hash = "#just" + trigger.nick + "things"
- #   query = GetRandomWords(random.randint(2,3))[1:]
- #   result = GenerateMeme(query, text, hash)
- #   
- #   if (result):
- #       im = pyimgur.Imgur(IMGUR_CLIENT_ID)
- #       item = im.upload_image(IMAGE_FILE_NAME)
- #       bot.say(item.link + " (" + query + ")")
+    if random.randint(1,100) > 2:
+        return ""
+    hash = "#just" + user_id_map[user] + "things"
+    query = random_words(random.randint(2,3))[1:]
+    result = generate_meme(query, text, hash)
+
+    if (result):
+        im = pyimgur.Imgur(IMGUR_CLIENT_ID)
+        item = im.upload_image(IMAGE_FILE_NAME)
+        return item.link + " (" + query + ")"
+    else:
+        return ""
 
