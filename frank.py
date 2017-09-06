@@ -55,12 +55,17 @@ def parse_slack_output(slack_rtm_output):
 
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
-    if slack_client.rtm_connect():
-        print("Frank connected and running!")
-        while True:
-            command, channel, user = parse_slack_output(slack_client.rtm_read())
-            if command and channel:
-                handle_plugins(command, channel, user)
-            time.sleep(READ_WEBSOCKET_DELAY)
-    else:
-        print("Connection failed. Invalid Slack token or bot ID?")
+    while True:
+        try:
+            if slack_client.rtm_connect():
+                print("Frank connected and running!")
+                while True:
+                    command, channel, user = parse_slack_output(slack_client.rtm_read())
+                    if command and channel:
+                        handle_plugins(command, channel, user)
+                    time.sleep(READ_WEBSOCKET_DELAY)
+            else:
+                print("Connection failed. Invalid Slack token or bot ID?")
+        except:
+            print("Retrying connection.")
+            
