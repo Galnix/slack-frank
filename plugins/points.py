@@ -47,6 +47,8 @@ def handle(command, channel, user):
                     word = temp
             if user_id_map[user] == word:
                 response = "Nice try."
+            elif word == 'c' or word == 'C':
+                response = ""
             else:
                 points = change_points(word, 1)
                 response = format_response(word, points)
